@@ -13,13 +13,13 @@ fn bench_true(c: &mut Criterion) {
 }
 
 fn bench_bwrap_true(c: &mut Criterion) {
-    c.bench_function("true", |b| {
+    c.bench_function("bwrap true", |b| {
         b.iter(|| run("bwrap", &["--ro-bind", "/", "/", "true"]))
     });
 }
 
 fn bench_bwrap_unshare_true(c: &mut Criterion) {
-    c.bench_function("true", |b| {
+    c.bench_function("bwrap true (unshare)", |b| {
         b.iter(|| run("bwrap", &["--unshare-all", "--ro-bind", "/", "/", "true"]))
     });
 }
