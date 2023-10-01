@@ -52,13 +52,14 @@ fn bench_unshare_library(c: &mut Criterion) {
         b.iter(|| {
             assert!(unshare::Command::new(&*TRUE)
                 .unshare(&[
-                    unshare::Namespace::Mount,
-                    unshare::Namespace::Uts,
-                    unshare::Namespace::Ipc,
-                    unshare::Namespace::User,
-                    unshare::Namespace::Pid,
-                    unshare::Namespace::Net,
                     unshare::Namespace::Cgroup,
+                    unshare::Namespace::Ipc,
+                    unshare::Namespace::Mount,
+                    unshare::Namespace::Net,
+                    unshare::Namespace::Pid,
+                    // no time option
+                    unshare::Namespace::User,
+                    unshare::Namespace::Uts,
                 ])
                 .status()
                 .unwrap()
@@ -67,10 +68,41 @@ fn bench_unshare_library(c: &mut Criterion) {
     });
 }
 
-// TODO:
-// * unshare
-// * systemd-nspawn
-// * docker
+fn bench_unshare(c: &mut Criterion) {
+    c.bench_function("unshare", |b| {
+        b.iter(|| {
+            run(
+                "unshare",
+                &[
+                    "--cgroup", "--ipc", "--mount", "--net", "--pid", "--time",
+                    "--user", "--uts", &TRUE,
+                ],
+            )
+        })
+    });
+}
+
+fn bench_docker(c: &mut Criterion) {
+    c.bench_function("docker", |b| {
+        b.iter(|| {
+            run(
+                "docker",
+                &["run", "registry.hub.docker.com/library/alpine", "/bin/true"],
+            )
+        })
+    });
+}
+
+fn bench_podman(c: &mut Criterion) {
+    c.bench_function("podman", |b| {
+        b.iter(|| {
+            run(
+                "podman",
+                &["run", "registry.hub.docker.com/library/alpine", "/bin/true"],
+            )
+        })
+    });
+}
 
 criterion_group!(
     benches,
@@ -79,5 +111,8 @@ criterion_group!(
     bench_bwrap,
     bench_bwrap_unshare_all,
     bench_unshare_library,
+    bench_unshare,
+    bench_docker,
+    bench_podman,
 );
 criterion_main!(benches);
