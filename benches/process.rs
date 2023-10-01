@@ -29,6 +29,20 @@ fn bench_normal_process(c: &mut Criterion) {
     c.bench_function("normal process", |b| b.iter(|| run(&TRUE, &[])));
 }
 
+fn bench_normal_process_resolve_path(c: &mut Criterion) {
+    let which_true =
+        which::which("true").unwrap().to_string_lossy().into_owned();
+    c.bench_function("normal process, $PATH resolved only", |b| {
+        b.iter(|| run(&which_true, &[]))
+    });
+}
+
+fn bench_normal_process_unresolved(c: &mut Criterion) {
+    c.bench_function("normal process, unresolved", |b| {
+        b.iter(|| run("true", &[]))
+    });
+}
+
 fn bench_sh(c: &mut Criterion) {
     c.bench_function("sh", |b| b.iter(|| run("sh", &["-c", &TRUE])));
 }
@@ -107,6 +121,8 @@ fn bench_podman(c: &mut Criterion) {
 criterion_group!(
     benches,
     bench_normal_process,
+    bench_normal_process_resolve_path,
+    bench_normal_process_unresolved,
     bench_sh,
     bench_bwrap,
     bench_bwrap_unshare_all,
