@@ -1,7 +1,17 @@
+use std::{ffi::OsStr, path::PathBuf};
+
 use criterion::{criterion_group, criterion_main, Criterion};
 
 lazy_static::lazy_static! {
-    static ref TRUE: String = which::which("true").unwrap().to_string_lossy().into_owned();
+    static ref TRUE: String = resolve_true(which::which("true").unwrap()).to_string_lossy().into_owned();
+}
+
+fn resolve_true(p: PathBuf) -> PathBuf {
+    // `true` may point to `coreutils`, find the final symlink with correct name
+    match std::fs::read_link(&p) {
+        Ok(p) if p.file_name() == Some(OsStr::new("true")) => resolve_true(p),
+        _ => p,
+    }
 }
 
 fn run(cmd: &str, args: &[&str]) {
